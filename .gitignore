@@ -1,0 +1,26 @@
+# Secrets and local configuration
+.env
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Python cache/build output
+__pycache__/
+*.py[cod]
+*.pyo
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+build/
+dist/
+*.egg-info/
+
+# Local IDE and OS files
+.idea/
+.vscode/
+.DS_Store
+
+# Local datasets
+data/movies.csv
