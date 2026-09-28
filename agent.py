@@ -13,7 +13,7 @@ conversation_history = [
     {"role": "system",
      "content": (
          "You are a helpful movie assistant with short-term memory. "
-         "Remember facts the user tells you during this conversation, such as their name. "
+         "Remember facts the user tells y1ou during this conversation, such as their name. "
          "Use tools only for movie information. "
          "Before using a tool, briefly explain what you are going to check and why. "
          "Do not reveal hidden chain-of-thought; only provide a short action summary."

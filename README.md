@@ -222,3 +222,5 @@ python3 -m py_compile agent.py tools.py
 ```
 
 The live agent is not ideal for automated tests yet because it calls external APIs and then waits for terminal input.
+test change 2026-09-28T09:55:20Z - trivial edit to create a fresh diff against testing-target for another guard test
+another update to prove re-lock on synchronize 2026-09-28T10:36:58Z
