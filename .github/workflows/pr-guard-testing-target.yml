@@ -1,0 +1,58 @@
+name: "[TEST] PR Guard - Confirm Merge into testing-target"
+
+# Sandbox replay of the WATX-3453 pattern (watchwire-infra), here on
+# testing-target/testing-3453 with real repo admin -- so this time the
+# required check is actually wired into branch protection, and merging is
+# genuinely blocked until confirmed, not just reported as failing.
+#
+# Mechanism:
+#  - Any PR whose base branch is testing-target gets a required status
+#    check ("confirm-prod-deploy") that FAILS unless the PR carries the
+#    "confirmed-prod" label.
+#  - Adding/removing that label re-triggers this workflow (see the
+#    `labeled`/`unlabeled` trigger types below), which flips the check.
+#  - A one-time PR comment (posted on open/reopen only, so pushes don't spam
+#    the thread) spells out what to do.
+#  - Branch protection on testing-target requires this check to pass before
+#    merge is allowed -- that's what actually blocks the merge button here
+#    (see the ruleset created alongside this branch).
+
+on:
+  pull_request:
+    types: [opened, reopened, synchronize, labeled, unlabeled]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+concurrency:
+  group: pr-guard-testing-target-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  confirm-prod-deploy:
+    if: ${{ github.event.pull_request.base.ref == 'testing-target' }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Post confirmation instructions (once, on open/reopen)
+        if: ${{ github.event.action == 'opened' || github.event.action == 'reopened' }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          set -euo pipefail
+          gh pr comment "${PR_NUMBER}" --repo "${REPO}" --body \
+            "Do you really want to merge into \`testing-target\`? This branch stands in for a protected default branch. If this is intentional, add the \`confirmed-prod\` label to this PR to unblock the \`confirm-prod-deploy\` check. If not, re-target this PR."
+
+      - name: Require explicit confirmation
+        env:
+          HAS_LABEL: ${{ contains(github.event.pull_request.labels.*.name, 'confirmed-prod') }}
+        run: |
+          set -euo pipefail
+          if [ "${HAS_LABEL}" != "true" ]; then
+            echo "::error::Merging into testing-target requires the 'confirmed-prod' label (confirm intent first). See the PR comment for details."
+            exit 1
+          fi
+          echo "'confirmed-prod' label present -- check passes, merge is unblocked."
